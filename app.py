@@ -1,3 +1,5 @@
+from pprint import pprint
+
 import httpx
 from fastapi import FastAPI, Header, Request
 from fastapi.responses import StreamingResponse
@@ -7,14 +9,22 @@ app = FastAPI()
 
 @app.post("/")
 async def stream(request: Request, x_github_token: str = Header(None)):
-    req = await request.json()
-    user_message = req["messages"][-1]["content"]
+    payload = await request.json()
+    pprint(payload, sort_dicts=False)
+    messages = payload["messages"]
+    messages.insert(
+        0,
+        {
+            "role": "system",
+            "content": "You are a helpful assistant that replies to user messages as if you were the Blackbeard Pirate.",
+        },
+    )
 
     headers = {
         "Authorization": f"Bearer {x_github_token}",
         "Content-Type": "application/json",
     }
-    data = {"messages": [{"role": "user", "content": user_message}], "stream": True}
+    data = {"messages": messages, "stream": True}
 
     def pass_generator():
         with httpx.stream(
