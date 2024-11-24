@@ -6,6 +6,14 @@ from fastapi import FastAPI, Header, Request
 from fastapi.responses import StreamingResponse
 
 app = FastAPI()
+client = httpx.AsyncClient()
+
+
+async def whoami(headers) -> str:
+    """Returns GitHub login handle."""
+    response = await client.get("https://api.github.com/user", headers=headers)
+    json_ = response.json()
+    return json_["login"]
 
 
 @app.post("/")
@@ -14,7 +22,21 @@ async def stream(
 ):
     payload = await request.json()
     pprint(payload, sort_dicts=False)
+
+    headers = {
+        "Authorization": f"Bearer {x_github_token}",
+        "Content-Type": "application/json",
+    }
+    login_handle = await whoami(headers)
+
     messages = payload["messages"]
+    messages.insert(
+        0,
+        {
+            "role": "system",
+            "content": f"Start every response with the user's name, which is @{login_handle}",
+        },
+    )
     messages.insert(
         0,
         {
@@ -22,11 +44,6 @@ async def stream(
             "content": "You are a helpful assistant that replies to user messages as if you were the Blackbeard Pirate.",
         },
     )
-
-    headers = {
-        "Authorization": f"Bearer {x_github_token}",
-        "Content-Type": "application/json",
-    }
     data = {"messages": messages, "stream": True}
 
     def pass_generator():
