@@ -16,20 +16,7 @@ async def whoami(headers) -> str:
     return json_["login"]
 
 
-@app.post("/")
-async def stream(
-    request: Request, x_github_token: Annotated[str | None, Header()] = None
-):
-    payload = await request.json()
-    pprint(payload, sort_dicts=False)
-
-    headers = {
-        "Authorization": f"Bearer {x_github_token}",
-        "Content-Type": "application/json",
-    }
-    login_handle = await whoami(headers)
-
-    messages = payload["messages"]
+def prepend_system_prompts(messages, login_handle: str) -> None:
     messages.insert(
         0,
         {
@@ -44,6 +31,23 @@ async def stream(
             "content": "You are a helpful assistant that replies to user messages as if you were the Blackbeard Pirate.",
         },
     )
+
+
+@app.post("/")
+async def stream(
+    request: Request, x_github_token: Annotated[str | None, Header()] = None
+):
+    payload = await request.json()
+    pprint(payload, sort_dicts=False)
+
+    headers = {
+        "Authorization": f"Bearer {x_github_token}",
+        "Content-Type": "application/json",
+    }
+    login_handle = await whoami(headers)
+
+    messages = payload["messages"]
+    prepend_system_prompts(messages, login_handle)
     data = {"messages": messages, "stream": True}
 
     def pass_generator():
