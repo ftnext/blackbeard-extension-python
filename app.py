@@ -1,4 +1,5 @@
 from pprint import pprint
+from typing import Annotated
 
 import httpx
 from fastapi import FastAPI, Header, Request
@@ -8,7 +9,9 @@ app = FastAPI()
 
 
 @app.post("/")
-async def stream(request: Request, x_github_token: str = Header(None)):
+async def stream(
+    request: Request, x_github_token: Annotated[str | None, Header()] = None
+):
     payload = await request.json()
     pprint(payload, sort_dicts=False)
     messages = payload["messages"]
