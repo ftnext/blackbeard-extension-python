@@ -9,6 +9,11 @@ app = FastAPI()
 client = httpx.AsyncClient()
 
 
+@app.get("/")
+def hello() -> str:
+    return "Hello Copilot!"
+
+
 async def whoami(headers) -> str:
     """Returns GitHub login handle."""
     response = await client.get("https://api.github.com/user", headers=headers)
