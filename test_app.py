@@ -1,4 +1,5 @@
 import httpx
+import respx
 from fastapi.testclient import TestClient
 
 from app import app
@@ -19,6 +20,7 @@ def github_llm_bytes_stream():
     yield b"data: [DONE]\n\n"
 
 
+@respx.mock(assert_all_mocked=True, assert_all_called=True)
 def test_blackbeard(respx_mock):
     respx_mock.get("https://api.github.com/user").mock(
         return_value=httpx.Response(200, json={"login": "github_handle"})
