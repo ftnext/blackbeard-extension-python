@@ -1,9 +1,20 @@
 from pprint import pprint
-from typing import Annotated
+from typing import Annotated, TypedDict
 
 import httpx
 from fastapi import FastAPI, Header, Request
 from fastapi.responses import StreamingResponse
+
+
+class Message(TypedDict):
+    role: str
+    content: str
+
+
+class RequestJson(TypedDict):
+    stream: bool
+    messages: list[Message]
+
 
 app = FastAPI()
 client = httpx.AsyncClient()
@@ -51,9 +62,9 @@ async def stream(
     }
     login_handle = await whoami(headers)
 
-    messages = payload["messages"]
+    messages: list[Message] = payload["messages"]
     prepend_system_prompts(messages, login_handle)
-    data = {"messages": messages, "stream": True}
+    data: RequestJson = {"messages": messages, "stream": True}
 
     def pass_generator():
         with httpx.stream(
