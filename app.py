@@ -25,6 +25,15 @@ def hello() -> str:
     return "Hello Copilot!"
 
 
+@app.get("/callback")
+def callback() -> str:
+    return (
+        "You may close this tab and return to GitHub.com (where you should "
+        "refresh the page and start a fresh chat). If you're using VS Code or "
+        "Visual Studio, return there."
+    )
+
+
 async def whoami(headers) -> str:
     """Returns GitHub login handle."""
     response = await client.get("https://api.github.com/user", headers=headers)
